@@ -1,0 +1,11 @@
+backend/venv/
+backend/uploads/
+backend/results/
+backend/lexsentinel.db
+backend/__pycache__/
+backend/*.pyc
+frontend/node_modules/
+frontend/dist/
+.env
+.env.local
+*.log
