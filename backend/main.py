@@ -185,10 +185,13 @@ def history(current_user: dict = Depends(get_current_user)):
 
 # ── Model ─────────────────────────────────────────────────────────────────────
 
-print("Loading FLAN-T5 model...")
-MODEL_NAME = "google/flan-t5-small"
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
+# print("Loading FLAN-T5 model...")
+# MODEL_NAME = "google/flan-t5-small"
+# tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+# model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
+MODEL_NAME = "cardiffnlp/twitter-roberta-base-sentiment-latest"
+from transformers import pipeline
+sentiment_pipeline = pipeline("sentiment-analysis", model=MODEL_NAME)
 print("Model loaded successfully.")
 
 # ── Analysis ──────────────────────────────────────────────────────────────────
@@ -199,11 +202,15 @@ def preprocess_text(text: str) -> str:
     text = re.sub(r'\b[A-Z][a-z]+ [A-Z][a-z]+\b', '[NAME]', text)
     return text
 
+# def analyze_sentiment(text: str) -> str:
+#     prompt = f"Classify the sentiment of this legal text as Positive, Negative, or Neutral: {text}"
+#     inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True)
+#     outputs = model.generate(**inputs, max_length=10)
+#     return tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
 def analyze_sentiment(text: str) -> str:
-    prompt = f"Classify the sentiment of this legal text as Positive, Negative, or Neutral: {text}"
-    inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True)
-    outputs = model.generate(**inputs, max_length=10)
-    return tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+    result = sentiment_pipeline(text[:512])[0]["label"]
+    mapping = {"positive": "Positive", "negative": "Negative", "neutral": "Neutral"}
+    return mapping.get(result.lower(), "Neutral")
 
 def run_analysis(job_id: str, file_path: str, file_type: str, user_id: str, filename: str):
     try:
